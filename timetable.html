@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bus Timetable</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .dashboard {
+      text-align: center;
+      margin-top: 50px;
+    }
+    .button-container {
+      margin-top: 30px;
+    }
+    .btn {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h1>🕒 Bus Timetable</h1>
+    <a href="passenger.html" class="dashboard-btn">← Back to Dashboard</a>
+
+    <div class="button-container">
+      <button class="btn" onclick="location.href='up-trips.html'">⬆️ Kandy to Dambawela</button>
+      <button class="btn" onclick="location.href='down-trips.html'">⬇️ Dambawela to Kandy</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script src="clock.js"></script>
+</body>
+</html>

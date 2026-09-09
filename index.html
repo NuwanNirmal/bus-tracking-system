@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kandy Bus Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+      border-radius: 15px;
+      margin-bottom: 40px;
+    }
+
+    .login-section {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn {
+      background: #1e4d50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #2c7a7b;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>🚍 Bus Tracking System</h1>
+      
+    </div>
+
+    <div class="login-section">
+      <form id="loginForm">
+        <h2>Login to Continue</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <select id="role" required>
+          <option value="">-- Select Role --</option>
+          <option value="driver">Driver</option>
+          <option value="passenger">Passenger</option>
+        </select>
+        <button type="submit" class="btn">Login</button>
+      </form>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script src="clock.js"></script>
+</body>
+</html>

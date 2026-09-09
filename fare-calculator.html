@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fare Calculator - Bus Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .calculator-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .trip-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .trip-btn {
+            padding: 10px 20px;
+            border: 2px solid #1e4d50;
+            background: white;
+            color: #1e4d50;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .trip-btn.active {
+            background: #1e4d50;
+            color: white;
+        }
+
+        .route-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .select-wrapper {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .fare-result {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .fare-amount {
+            font-size: 24px;
+            color: #1e4d50;
+            font-weight: bold;
+        }
+
+        .back-home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #1e4d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-home-btn:hover {
+            background: #2c7a7b;
+        }
+    </style>
+</head>
+<body>
+    <a href="passenger.html" class="back-home-btn">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <div class="calculator-container">
+        <h1 style="text-align: center; margin-bottom: 30px;">Bus Fare Calculator</h1>
+        
+        <div class="trip-selector">
+            <button class="trip-btn active" onclick="setTripType('up')">Kandy to Dambawela</button>
+            <button class="trip-btn" onclick="setTripType('down')">Dambawela to Kandy</button>
+        </div>
+
+        <div class="route-selector">
+            <div class="select-wrapper">
+                <label for="from">From:</label>
+                <select id="from" onchange="calculateFare()">
+                    <option value="">Select Starting Point</option>
+                </select>
+            </div>
+            <div class="select-wrapper">
+                <label for="to">To:</label>
+                <select id="to" onchange="calculateFare()">
+                    <option value="">Select Destination</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="fare-result">
+            <h3>Total Fare:</h3>
+            <div class="fare-amount" id="fareAmount">Rs. 0.00</div>
+        </div>
+    </div>
+
+    <script>
+        const halts = ['Kandy', 'Rathubokkuwa', 'Semaneriya', 'Ampitiya', 'Dambawela'];
+        let currentTripType = 'up';
+        
+        // Initialize the dropdowns
+        function initializeDropdowns() {
+            const fromSelect = document.getElementById('from');
+            const toSelect = document.getElementById('to');
+            
+            // Clear existing options
+            fromSelect.innerHTML = '<option value="">Select Starting Point</option>';
+            toSelect.innerHTML = '<option value="">Select Destination</option>';
+            
+            // Add halts based on trip type
+            const haltsToUse = currentTripType === 'up' ? halts : [...halts].reverse();
+            
+            haltsToUse.forEach(halt => {
+                fromSelect.add(new Option(halt, halt));
+                toSelect.add(new Option(halt, halt));
+            });
+        }
+
+        function setTripType(type) {
+            currentTripType = type;
+            document.querySelectorAll('.trip-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            initializeDropdowns();
+            calculateFare();
+        }
+
+        function calculateFare() {
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            
+            if (!from || !to) {
+                document.getElementById('fareAmount').textContent = 'Rs. 0.00';
+                return;
+            }
+
+            const haltsToUse = currentTripType === 'up' ? halts : [...halts].reverse();
+            const fromIndex = haltsToUse.indexOf(from);
+            const toIndex = haltsToUse.indexOf(to);
+            
+            if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+                document.getElementById('fareAmount').textContent = 'Rs. 0.00';
+                return;
+            }
+
+            const haltCount = Math.abs(toIndex - fromIndex);
+            let fare = 0;
+
+            switch(haltCount) {
+                case 1:
+                    fare = 27;
+                    break;
+                case 2:
+                    fare = 35;
+                    break;
+                case 3:
+                    fare = 45;
+                    break;
+                case 4:
+                    fare = 55;
+                    break;
+                default:
+                    fare = 0;
+            }
+
+            document.getElementById('fareAmount').textContent = `Rs. ${fare.toFixed(2)}`;
+        }
+
+        // Initialize the page
+        initializeDropdowns();
+    </script>
+    <script src="fare-calculator.js"></script>
+    <script src="clock.js"></script>
+</body>
+</html> 

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bus Route Info</title>
+  <style>
+    body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #74ebd5, #9face6);
+    margin: 0;
+    padding: 150px 150px 0 150px;
+  }
+
+    h1 {
+        text-align: center;
+        color: #000000;
+        margin-bottom: 30px;
+    }
+
+    .route-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    .route-box {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 400px;
+      margin: 20px;
+      padding: 20px;
+    }
+
+    .route-title {
+      font-size: 20px;
+      color: #2196f3;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .stop {
+      position: relative;
+      padding-left: 25px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .stop::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      background-color: #2196f3;
+      border-radius: 50%;
+    }
+
+    .home-btn {
+        background-color: #00838f;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    }
+
+    .home-btn:hover {
+        background-color: #006064;
+    }
+
+    .card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+    /* Ensure clock stays in correct position */
+    .real-time-clock {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      z-index: 9999 !important;
+      background-color: rgba(0, 0, 0, 0.8) !important;
+      color: white !important;
+      padding: 10px 15px !important;
+      border-radius: 8px !important;
+      font-family: Arial, sans-serif !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .clock-time {
+      font-size: 1.2em !important;
+      font-weight: bold !important;
+      margin-bottom: 5px !important;
+    }
+
+    .clock-date {
+      font-size: 0.9em !important;
+      opacity: 0.9 !important;
+  }
+  </style>
+</head>
+<body>
+
+  <a href="passenger.html" class="home-btn">← Back to Dashboard</a>
+
+  <h1>🚌 View Route Information</h1>
+
+  <div class="route-container">
+    <!-- CTB Bus Route -->
+    <div class="route-box">
+      <div class="route-title">CTB Bus Route</div>
+      <div class="stop">Kandy</div>
+      <div class="stop">Mahaiyawa</div>
+      <div class="stop">Thannekumbura</div>
+      <div class="stop">Pichchamalwaththa Junction</div>
+      <div class="stop">Dambawela Junction</div>
+      <div class="stop">Dambawela</div>
+    </div>
+
+    <!-- Private Bus Route -->
+    <div class="route-box">
+      <div class="route-title">Private Bus Route</div>
+      <div class="stop">Kandy</div>
+      <div class="stop">Rathubokkuwa</div>
+      <div class="stop">Semaneriya</div>
+      <div class="stop">Ampitiya</div>
+      <div class="stop">Dambawela Junction</div>
+      <div class="stop">Dambawela</div>
+    </div>
+  </div>
+
+  <script src="route-visualizer.js"></script>
+  <script src="clock.js"></script>
+</body>
+</html>

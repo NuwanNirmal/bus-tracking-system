@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Your Trip - Bus Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .rating-container {
+            max-width: 800px;
+            margin: 150px auto 50px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 32px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .star.active, .star.highlighted {
+            color: #ffd700;
+        }
+
+        .feedback-categories {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .category-checkbox {
+            display: none;
+        }
+
+        .category-label {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .category-checkbox:checked + .category-label {
+            background: #1e4d50;
+            color: white;
+        }
+
+        .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .feedback-form textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 120px;
+            font-size: 16px;
+        }
+
+        .submit-feedback {
+            background: #1e4d50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+
+        .submit-feedback:hover {
+            background: #2c7a7b;
+        }
+
+        .back-home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #1e4d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-home-btn:hover {
+            background: #2c7a7b;
+        }
+
+        .rating-header {
+            text-align: center;
+            color: #1e4d50;
+            margin-bottom: 30px;
+        }
+
+        .rating-description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <a href="passenger.html" class="back-home-btn">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <div class="rating-container">
+        <div class="rating-header">
+            <h1>Rate Your Trip</h1>
+            <p class="rating-description">Help us improve our service by sharing your experience</p>
+        </div>
+
+        <div class="star-rating">
+            <i class="fas fa-star star" data-rating="1"></i>
+            <i class="fas fa-star star" data-rating="2"></i>
+            <i class="fas fa-star star" data-rating="3"></i>
+            <i class="fas fa-star star" data-rating="4"></i>
+            <i class="fas fa-star star" data-rating="5"></i>
+        </div>
+
+        <form class="feedback-form" onsubmit="submitFeedback(event)">
+            <div class="feedback-categories">
+                <input type="checkbox" id="punctuality" name="category" value="punctuality" class="category-checkbox">
+                <label for="punctuality" class="category-label">Punctuality</label>
+                
+                <input type="checkbox" id="cleanliness" name="category" value="cleanliness" class="category-checkbox">
+                <label for="cleanliness" class="category-label">Cleanliness</label>
+                
+                <input type="checkbox" id="staff" name="category" value="staff" class="category-checkbox">
+                <label for="staff" class="category-label">Staff Behavior</label>
+                
+                <input type="checkbox" id="comfort" name="category" value="comfort" class="category-checkbox">
+                <label for="comfort" class="category-label">Comfort</label>
+            </div>
+
+            <textarea placeholder="Share your experience (optional)" id="feedbackText"></textarea>
+            <button type="submit" class="submit-feedback">Submit Feedback</button>
+        </form>
+    </div>
+
+    <script>
+        let currentRating = 0;
+
+        // Star rating functionality
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const rating = parseInt(this.dataset.rating);
+                highlightStars(rating);
+            });
+
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                currentRating = rating;
+                setRating(rating);
+            });
+        });
+
+        document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+            if (currentRating > 0) {
+                highlightStars(currentRating);
+            } else {
+                clearStars();
+            }
+        });
+
+        function highlightStars(rating) {
+            clearStars();
+            document.querySelectorAll('.star').forEach(star => {
+                if (parseInt(star.dataset.rating) <= rating) {
+                    star.classList.add('highlighted');
+                }
+            });
+        }
+
+        function setRating(rating) {
+            clearStars();
+            document.querySelectorAll('.star').forEach(star => {
+                if (parseInt(star.dataset.rating) <= rating) {
+                    star.classList.add('active');
+                }
+            });
+        }
+
+        function clearStars() {
+            document.querySelectorAll('.star').forEach(star => {
+                star.classList.remove('highlighted');
+                star.classList.remove('active');
+            });
+        }
+
+        function submitFeedback(event) {
+            event.preventDefault();
+            const rating = currentRating;
+            const categories = Array.from(document.querySelectorAll('input[name="category"]:checked'))
+                .map(cb => cb.value);
+            const comment = document.getElementById('feedbackText').value;
+
+            if (rating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+
+            // Here you would typically send this data to your backend
+            console.log({
+                rating,
+                categories,
+                comment
+            });
+
+            // Clear form
+            currentRating = 0;
+            clearStars();
+            document.querySelectorAll('input[name="category"]').forEach(cb => cb.checked = false);
+            document.getElementById('feedbackText').value = '';
+
+            alert('Thank you for your feedback!');
+            
+            // Redirect back to dashboard after submission
+            setTimeout(() => {
+                window.location.href = 'passenger.html';
+            }, 1500);
+        }
+    </script>
+    <script src="feedback.js"></script>
+    <script src="clock.js"></script>
+</body>
+</html> 

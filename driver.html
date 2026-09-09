@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard - Bus Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .status-section {
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: #1e4d50;
+            position: relative;
+        }
+
+        .status-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .pause-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .action-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .route-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stop-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .stop-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background: white;
+        }
+
+        .stop-item:last-child {
+            border-bottom: none;
+        }
+
+        .stop-time {
+            margin-left: auto;
+            color: #666;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .completed {
+            background: #4CAF50;
+        }
+
+        .current {
+            background: #ff9800;
+        }
+
+        .upcoming {
+            background: #808080;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e4d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .logout-btn:hover {
+            background: #2c7a7b;
+        }
+
+        .back-home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #1e4d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            z-index: 1000;
+        }
+
+        .back-home-btn:hover {
+            background: #2c7a7b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            color: #666;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e4d50;
+            margin: 10px 0;
+        }
+
+        .route-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .route-selector h3 {
+            margin: 0 0 10px 0;
+            color: #1e4d50;
+        }
+
+        .route-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .direction-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .direction-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .direction-btn.active {
+            background: #1e4d50;
+            color: white;
+        }
+
+        .direction-btn:hover {
+            background: #2c7a7b;
+            color: white;
+        }
+
+        .route-selector {
+            display: none;
+        }
+
+        .route-selector.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 10px;
+            }
+
+            .status-section {
+                padding: 20px;
+            }
+
+            .direction-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home-btn">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <div class="dashboard">
+        <div class="status-section">
+            <h1>Driver Dashboard</h1>
+            <div class="direction-buttons">
+                <button class="direction-btn" onclick="selectDirection('up')" id="upBtn">
+                    <i class="fas fa-arrow-up"></i> Kandy to Dambawela
+                </button>
+                <button class="direction-btn" onclick="selectDirection('down')" id="downBtn">
+                    <i class="fas fa-arrow-down"></i> Dambawela to Kandy
+                </button>
+            </div>
+            <div class="route-selector" id="upRoutes">
+                <h3>Kandy to Dambawela Routes</h3>
+                <select id="upRouteSelect" onchange="updateRouteInfo('up')">
+                    <option value="">Select Your Route</option>
+                    <optgroup label="CTB Routes">
+                        <option value="ctb-6.10">CTB Bus (6:10 AM) - Kandy to Dambawela</option>
+                        <option value="ctb-8.05">CTB Bus (8:05 AM) - Kandy to Dambawela</option>
+                        <option value="ctb-10.00">CTB Bus (10:00 AM) - Kandy to Dambawela</option>
+                        <option value="ctb-12.00">CTB Bus (12:00 PM) - Kandy to Dambawela</option>
+                        <option value="ctb-2.20">CTB Bus (2:20 PM) - Kandy to Dambawela</option>
+                        <option value="ctb-4.15">CTB Bus (4:15 PM) - Kandy to Dambawela</option>
+                    </optgroup>
+                    <optgroup label="Private Routes">
+                        <option value="pvt-6.30">Private Bus (6:30 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-7.15">Private Bus (7:15 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-8.15">Private Bus (8:15 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-8.45">Private Bus (8:45 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-9.45">Private Bus (9:45 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-11.45">Private Bus (11:45 AM) - Kandy to Dambawela</option>
+                        <option value="pvt-12.30">Private Bus (12:30 PM) - Kandy to Dambawela</option>
+                        <option value="pvt-2.00">Private Bus (2:00 PM) - Kandy to Dambawela</option>
+                        <option value="pvt-2.45">Private Bus (2:45 PM) - Kandy to Dambawela</option>
+                        <option value="pvt-4.45">Private Bus (4:45 PM) - Kandy to Dambawela</option>
+                        <option value="pvt-5.45">Private Bus (5:45 PM) - Kandy to Dambawela</option>
+                        <option value="pvt-6.45">Private Bus (6:45 PM) - Kandy to Dambawela</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="route-selector" id="downRoutes">
+                <h3>Dambawela to Kandy Routes</h3>
+                <select id="downRouteSelect" onchange="updateRouteInfo('down')">
+                    <option value="">Select Your Route</option>
+                    <optgroup label="CTB Routes">
+                        <option value="ctb-6.30">CTB Bus (6:30 AM) - Dambawela to Kandy</option>
+                        <option value="ctb-8.25">CTB Bus (8:25 AM) - Dambawela to Kandy</option>
+                        <option value="ctb-10.20">CTB Bus (10:20 AM) - Dambawela to Kandy</option>
+                        <option value="ctb-12.20">CTB Bus (12:20 PM) - Dambawela to Kandy</option>
+                        <option value="ctb-2.40">CTB Bus (2:40 PM) - Dambawela to Kandy</option>
+                        <option value="ctb-4.35">CTB Bus (4:35 PM) - Dambawela to Kandy</option>
+                    </optgroup>
+                    <optgroup label="Private Routes">
+                        <option value="pvt-6.50">Private Bus (6:50 AM) - Dambawela to Kandy</option>
+                        <option value="pvt-7.35">Private Bus (7:35 AM) - Dambawela to Kandy</option>
+                        <option value="pvt-8.35">Private Bus (8:35 AM) - Dambawela to Kandy</option>
+                        <option value="pvt-9.05">Private Bus (9:05 AM) - Dambawela to Kandy</option>
+                        <option value="pvt-10.05">Private Bus (10:05 AM) - Dambawela to Kandy</option>
+                        <option value="pvt-12.05">Private Bus (12:05 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-12.50">Private Bus (12:50 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-2.20">Private Bus (2:20 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-3.05">Private Bus (3:05 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-5.05">Private Bus (5:05 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-6.05">Private Bus (6:05 PM) - Dambawela to Kandy</option>
+                        <option value="pvt-7.05">Private Bus (7:05 PM) - Dambawela to Kandy</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="status-controls">
+                <button class="status-btn start-btn" onclick="startRoute()" id="startBtn">
+                    <i class="fas fa-play"></i> Start Route
+                </button>
+                <button class="status-btn pause-btn" onclick="pauseRoute()" id="pauseBtn" disabled>
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button class="status-btn stop-btn" onclick="endRoute()" id="stopBtn" disabled>
+                    <i class="fas fa-stop"></i> End Route
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Next Stop</h3>
+                <div class="value" id="nextStop">-</div>
+                <div class="sub-value" id="nextStopTime">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Time to Next Stop</h3>
+                <div class="value" id="timeToNext">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Current Status</h3>
+                <div class="value" id="currentStatus">Not Started</div>
+            </div>
+            <div class="stat-card">
+                <h3>Route Progress</h3>
+                <div class="value" id="routeProgress">0%</div>
+            </div>
+        </div>
+
+        <div class="route-info">
+            <h2>Route Progress</h2>
+            <ul class="stop-list" id="stopList">
+                <!-- Stops will be populated dynamically -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentRoute = null;
+        let routeStatus = 'not_started';
+        let currentStopIndex = 0;
+        let routeStops = [];
+        let currentDirection = null;
+
+        function selectDirection(direction) {
+            currentDirection = direction;
+            document.getElementById('upRoutes').classList.toggle('active', direction === 'up');
+            document.getElementById('downRoutes').classList.toggle('active', direction === 'down');
+            document.getElementById('upBtn').classList.toggle('active', direction === 'up');
+            document.getElementById('downBtn').classList.toggle('active', direction === 'down');
+            resetRouteInfo();
+        }
+
+        function updateRouteInfo(direction) {
+            const routeSelect = document.getElementById(direction + 'RouteSelect');
+            const selectedRoute = routeSelect.value;
+            
+            if (!selectedRoute) {
+                resetRouteInfo();
+                return;
+            }
+
+            // Parse route information
+            const [type, time] = selectedRoute.split('-');
+            currentRoute = {
+                type: type.toUpperCase(),
+                time: time,
+                direction: direction,
+                stops: getRouteStops(type, time, direction)
+            };
+
+            // Update UI
+            updateStopList();
+            resetRouteStatus();
+        }
+
+        function getRouteStops(type, time, direction) {
+            if (direction === 'up') {
+                if (type === 'ctb') {
+                    return [
+                        { name: 'Kandy', time: time },
+                        { name: 'Mahaiyawa', time: addMinutes(time, 10) },
+                        { name: 'Thannekumbura', time: addMinutes(time, 25) },
+                        { name: 'Pichchamalwaththa Junction', time: addMinutes(time, 30) },
+                        { name: 'Dambawela Junction', time: addMinutes(time, 35) },
+                        { name: 'Dambawela ATI', time: addMinutes(time, 40) }
+                    ];
+                } else {
+                    return [
+                        { name: 'Kandy', time: time },
+                        { name: 'Rathubokkuwa', time: addMinutes(time, 15) },
+                        { name: 'Semaneriya', time: addMinutes(time, 20) },
+                        { name: 'Ampitiya', time: addMinutes(time, 30) },
+                        { name: 'Dambawela Junction', time: addMinutes(time, 35) },
+                        { name: 'Dambawela ATI', time: addMinutes(time, 40) }
+                    ];
+                }
+            } else {
+                if (type === 'ctb') {
+                    return [
+                        { name: 'Dambawela ATI', time: time },
+                        { name: 'Dambawela Junction', time: addMinutes(time, 5) },
+                        { name: 'Pichchamalwaththa Junction', time: addMinutes(time, 10) },
+                        { name: 'Thannekumbura', time: addMinutes(time, 15) },
+                        { name: 'Mahaiyawa', time: addMinutes(time, 30) },
+                        { name: 'Kandy', time: addMinutes(time, 40) }
+                    ];
+                } else {
+                    return [
+                        { name: 'Dambawela ATI', time: time },
+                        { name: 'Dambawela Junction', time: addMinutes(time, 5) },
+                        { name: 'Ampitiya', time: addMinutes(time, 10) },
+                        { name: 'Semaneriya', time: addMinutes(time, 20) },
+                        { name: 'Rathubokkuwa', time: addMinutes(time, 30) },
+                        { name: 'Kandy', time: addMinutes(time, 40) }
+                    ];
+                }
+            }
+        }
+
+        function addMinutes(timeStr, minutes) {
+            const [hours, mins] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setHours(hours, mins + minutes);
+            return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function updateStopList() {
+            const stopList = document.getElementById('stopList');
+            stopList.innerHTML = '';
+
+            currentRoute.stops.forEach((stop, index) => {
+                const li = document.createElement('li');
+                li.className = 'stop-item';
+                li.innerHTML = `
+                    <span class="status-indicator ${getStopStatus(index)}"></span>
+                    <span>${stop.name}</span>
+                    <span class="stop-time">${stop.time}</span>
+                `;
+                stopList.appendChild(li);
+            });
+        }
+
+        function getStopStatus(index) {
+            if (routeStatus === 'not_started') return 'upcoming';
+            if (index < currentStopIndex) return 'completed';
+            if (index === currentStopIndex) return 'current';
+            return 'upcoming';
+        }
+
+        function startRoute() {
+            if (!currentRoute) {
+                alert('Please select a route first');
+                return;
+            }
+
+            routeStatus = 'in_progress';
+            currentStopIndex = 0;
+            updateUI();
+            startRouteTracking();
+        }
+
+        function pauseRoute() {
+            routeStatus = 'paused';
+            updateUI();
+        }
+
+        function endRoute() {
+            routeStatus = 'completed';
+            currentStopIndex = currentRoute.stops.length;
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update button states
+            document.getElementById('startBtn').disabled = routeStatus !== 'not_started';
+            document.getElementById('pauseBtn').disabled = routeStatus !== 'in_progress';
+            document.getElementById('stopBtn').disabled = routeStatus === 'not_started' || routeStatus === 'completed';
+
+            // Update status
+            document.getElementById('currentStatus').textContent = 
+                routeStatus === 'not_started' ? 'Not Started' :
+                routeStatus === 'in_progress' ? 'In Progress' :
+                routeStatus === 'paused' ? 'Paused' : 'Completed';
+
+            // Update progress
+            const progress = (currentStopIndex / currentRoute.stops.length) * 100;
+            document.getElementById('routeProgress').textContent = `${Math.round(progress)}%`;
+
+            // Update next stop info
+            if (currentStopIndex < currentRoute.stops.length) {
+                const nextStop = currentRoute.stops[currentStopIndex];
+                document.getElementById('nextStop').textContent = nextStop.name;
+                document.getElementById('nextStopTime').textContent = nextStop.time;
+            } else {
+                document.getElementById('nextStop').textContent = 'Route Complete';
+                document.getElementById('nextStopTime').textContent = '';
+            }
+
+            updateStopList();
+        }
+
+        function resetRouteInfo() {
+            currentRoute = null;
+            routeStatus = 'not_started';
+            currentStopIndex = 0;
+            document.getElementById('stopList').innerHTML = '';
+            resetRouteStatus();
+        }
+
+        function resetRouteStatus() {
+            document.getElementById('nextStop').textContent = '-';
+            document.getElementById('nextStopTime').textContent = '-';
+            document.getElementById('timeToNext').textContent = '-';
+            document.getElementById('currentStatus').textContent = 'Not Started';
+            document.getElementById('routeProgress').textContent = '0%';
+            document.getElementById('startBtn').disabled = !currentRoute;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        function startRouteTracking() {
+            // This would be replaced with actual GPS tracking in a real implementation
+        setInterval(() => {
+                if (routeStatus === 'in_progress' && currentStopIndex < currentRoute.stops.length) {
+                    const now = new Date();
+                    const currentStop = currentRoute.stops[currentStopIndex];
+                    const [hours, minutes] = currentStop.time.split(':').map(Number);
+                    const stopTime = new Date();
+                    stopTime.setHours(hours, minutes);
+
+                    if (now >= stopTime) {
+                        currentStopIndex++;
+                        updateUI();
+                    }
+
+                    // Update time to next stop
+                    if (currentStopIndex < currentRoute.stops.length) {
+                        const nextStop = currentRoute.stops[currentStopIndex];
+                        const [nextHours, nextMinutes] = nextStop.time.split(':').map(Number);
+                        const nextStopTime = new Date();
+                        nextStopTime.setHours(nextHours, nextMinutes);
+                        const timeDiff = Math.round((nextStopTime - now) / 60000);
+                        document.getElementById('timeToNext').textContent = `${timeDiff} min`;
+                    }
+                }
+            }, 1000);
+        }
+    </script>
+    <script src="script.js"></script>
+    <script src="clock.js"></script>
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Tracker - Live Map</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+            margin-top: 60px;
+        }
+        
+        .header {
+            background: #1e4d50;
+            color: white;
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 1000;
+        }
+
+        .header h2 {
+            text-align: center;
+            margin: 0;
+            padding: 10px 0;
+            line-height: 40px;
+        }
+
+        .bus-info {
+            position: absolute;
+            top: 70px;
+            right: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .bus-list {
+            margin-top: 10px;
+        }
+
+        .bus-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .bus-item:hover {
+            background: #f5f5f5;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.history.back()">← Back</button>
+        <h2>Live Bus Tracking</h2>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="bus-info">
+        <h3>Active Buses</h3>
+        <div class="bus-list" id="busList">
+            <!-- Bus items will be added dynamically -->
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Kandy
+        const map = L.map('map').setView([7.2906, 80.6337], 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Bus stop coordinates (exact locations)
+        const busStops = {
+            'Kandy': [7.290217, 80.632793],
+            'Mahaiyawa': [7.308231, 80.637192],
+            'Thannekumbura': [7.281422, 80.666305],
+            'Pichchamalwaththa Junction': [7.271176, 80.683670],
+            'Dambawela Junction': [7.266430, 80.671613],
+            'Dambawela ATI': [7.265506, 80.677374],
+            'Rathubokkuwa': [7.287026, 80.647775],
+            'Semaneriya': [7.280305, 80.654423],
+            'Ampitiya': [7.267689, 80.666360]
+        };
+
+        // Create stop markers
+        const stopIcon = L.divIcon({
+            html: '📍',
+            className: 'stop-icon',
+            iconSize: [35, 35],
+            iconAnchor: [17, 35],
+            popupAnchor: [0, -35]
+        });
+
+        // Add markers for each bus stop
+        Object.entries(busStops).forEach(([name, coords]) => {
+            L.marker(coords, { icon: stopIcon })
+                .bindPopup(`<b>${name}</b>`, {
+                    className: 'stop-popup'
+                })
+                .addTo(map);
+        });
+
+        // Add some CSS for the stop markers
+        const style = document.createElement('style');
+        style.textContent = `
+            .stop-icon {
+                font-size: 35px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+            .stop-popup {
+                font-size: 14px;
+                font-weight: bold;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Bus routes with timings
+        const busRoutes = [
+            // Up Routes (Kandy to Dambawela)
+            {
+                id: 'CTB-6.10',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '6:10' },
+                    { name: 'Mahaiyawa', time: '6:20' },
+                    { name: 'Thannekumbura', time: '6:35' },
+                    { name: 'Pichchamalwaththa Junction', time: '6:40' },
+                    { name: 'Dambawela Junction', time: '6:45' },
+                    { name: 'Dambawela ATI', time: '6:50' }
+                ]
+            },
+            {
+                id: 'PVT-6.30',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '6:30' },
+                    { name: 'Rathubokkuwa', time: '6:45' },
+                    { name: 'Semaneriya', time: '6:50' },
+                    { name: 'Ampitiya', time: '7:00' },
+                    { name: 'Dambawela Junction', time: '7:05' },
+                    { name: 'Dambawela ATI', time: '7:10' }
+                ]
+            },
+            {
+                id: 'PVT-7.15',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '7:15' },
+                    { name: 'Rathubokkuwa', time: '7:30' },
+                    { name: 'Semaneriya', time: '7:35' },
+                    { name: 'Ampitiya', time: '7:45' },
+                    { name: 'Dambawela Junction', time: '7:50' },
+                    { name: 'Dambawela ATI', time: '7:55' }
+                ]
+            },
+            {
+                id: 'CTB-8.05',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '8:05' },
+                    { name: 'Mahaiyawa', time: '8:15' },
+                    { name: 'Thannekumbura', time: '8:30' },
+                    { name: 'Pichchamalwaththa Junction', time: '8:35' },
+                    { name: 'Dambawela Junction', time: '8:40' },
+                    { name: 'Dambawela ATI', time: '8:45' }
+                ]
+            },
+            {
+                id: 'PVT-8.15',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '8:15' },
+                    { name: 'Rathubokkuwa', time: '8:30' },
+                    { name: 'Semaneriya', time: '8:35' },
+                    { name: 'Ampitiya', time: '8:45' },
+                    { name: 'Dambawela Junction', time: '8:50' },
+                    { name: 'Dambawela ATI', time: '8:55' }
+                ]
+            },
+            {
+                id: 'PVT-8.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '8:45' },
+                    { name: 'Rathubokkuwa', time: '9:00' },
+                    { name: 'Semaneriya', time: '9:05' },
+                    { name: 'Ampitiya', time: '9:15' },
+                    { name: 'Dambawela Junction', time: '9:20' },
+                    { name: 'Dambawela ATI', time: '9:25' }
+                ]
+            },
+            {
+                id: 'PVT-9.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '9:45' },
+                    { name: 'Rathubokkuwa', time: '10:00' },
+                    { name: 'Semaneriya', time: '10:05' },
+                    { name: 'Ampitiya', time: '10:15' },
+                    { name: 'Dambawela Junction', time: '10:20' },
+                    { name: 'Dambawela ATI', time: '10:25' }
+                ]
+            },
+            {
+                id: 'CTB-10.00',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '10:00' },
+                    { name: 'Mahaiyawa', time: '10:10' },
+                    { name: 'Thannekumbura', time: '10:25' },
+                    { name: 'Pichchamalwaththa Junction', time: '10:30' },
+                    { name: 'Dambawela Junction', time: '10:35' },
+                    { name: 'Dambawela ATI', time: '10:40' }
+                ]
+            },
+            {
+                id: 'PVT-11.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '11:45' },
+                    { name: 'Rathubokkuwa', time: '12:00' },
+                    { name: 'Semaneriya', time: '12:05' },
+                    { name: 'Ampitiya', time: '12:15' },
+                    { name: 'Dambawela Junction', time: '12:20' },
+                    { name: 'Dambawela ATI', time: '12:25' }
+                ]
+            },
+            {
+                id: 'CTB-12.00',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '12:00' },
+                    { name: 'Mahaiyawa', time: '12:10' },
+                    { name: 'Thannekumbura', time: '12:25' },
+                    { name: 'Pichchamalwaththa Junction', time: '12:30' },
+                    { name: 'Dambawela Junction', time: '12:35' },
+                    { name: 'Dambawela ATI', time: '12:40' }
+                ]
+            },
+            {
+                id: 'PVT-12.30',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '12:30' },
+                    { name: 'Rathubokkuwa', time: '12:45' },
+                    { name: 'Semaneriya', time: '12:50' },
+                    { name: 'Ampitiya', time: '13:00' },
+                    { name: 'Dambawela Junction', time: '13:05' },
+                    { name: 'Dambawela ATI', time: '13:10' }
+                ]
+            },
+            {
+                id: 'PVT-14.00',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '14:00' },
+                    { name: 'Rathubokkuwa', time: '14:15' },
+                    { name: 'Semaneriya', time: '14:20' },
+                    { name: 'Ampitiya', time: '14:30' },
+                    { name: 'Dambawela Junction', time: '14:35' },
+                    { name: 'Dambawela ATI', time: '14:40' }
+                ]
+            },
+            {
+                id: 'CTB-14.20',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '14:20' },
+                    { name: 'Mahaiyawa', time: '14:30' },
+                    { name: 'Thannekumbura', time: '14:45' },
+                    { name: 'Pichchamalwaththa Junction', time: '14:50' },
+                    { name: 'Dambawela Junction', time: '14:55' },
+                    { name: 'Dambawela ATI', time: '15:00' }
+                ]
+            },
+            {
+                id: 'PVT-14.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '14:45' },
+                    { name: 'Rathubokkuwa', time: '15:00' },
+                    { name: 'Semaneriya', time: '15:05' },
+                    { name: 'Ampitiya', time: '15:15' },
+                    { name: 'Dambawela Junction', time: '15:20' },
+                    { name: 'Dambawela ATI', time: '15:25' }
+                ]
+            },
+            {
+                id: 'CTB-16.15',
+                type: 'CTB',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '16:15' },
+                    { name: 'Mahaiyawa', time: '16:25' },
+                    { name: 'Thannekumbura', time: '16:40' },
+                    { name: 'Pichchamalwaththa Junction', time: '16:45' },
+                    { name: 'Dambawela Junction', time: '16:50' },
+                    { name: 'Dambawela ATI', time: '16:55' }
+                ]
+            },
+            {
+                id: 'PVT-16.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '16:45' },
+                    { name: 'Rathubokkuwa', time: '17:00' },
+                    { name: 'Semaneriya', time: '17:05' },
+                    { name: 'Ampitiya', time: '17:15' },
+                    { name: 'Dambawela Junction', time: '17:20' },
+                    { name: 'Dambawela ATI', time: '17:25' }
+                ]
+            },
+            {
+                id: 'PVT-17.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '17:45' },
+                    { name: 'Rathubokkuwa', time: '18:00' },
+                    { name: 'Semaneriya', time: '18:05' },
+                    { name: 'Ampitiya', time: '18:15' },
+                    { name: 'Dambawela Junction', time: '18:20' },
+                    { name: 'Dambawela ATI', time: '18:25' }
+                ]
+            },
+            {
+                id: 'PVT-18.45',
+                type: 'Private',
+                route: 'Kandy - Dambawela',
+                direction: 'up',
+                stops: [
+                    { name: 'Kandy', time: '18:45' },
+                    { name: 'Rathubokkuwa', time: '19:00' },
+                    { name: 'Semaneriya', time: '19:05' },
+                    { name: 'Ampitiya', time: '19:15' },
+                    { name: 'Dambawela Junction', time: '19:20' },
+                    { name: 'Dambawela ATI', time: '19:25' }
+                ]
+            },
+            // Down Routes (Dambawela to Kandy)
+            {
+                id: 'PVT-5.45-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '5:45' },
+                    { name: 'Dambawela Junction', time: '5:50' },
+                    { name: 'Ampitiya', time: '5:55' },
+                    { name: 'Semaneriya', time: '6:00' },
+                    { name: 'Rathubokkuwa', time: '6:10' },
+                    { name: 'Kandy', time: '6:25' }
+                ]
+            },
+            {
+                id: 'PVT-6.30-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '6:30' },
+                    { name: 'Dambawela Junction', time: '6:35' },
+                    { name: 'Ampitiya', time: '6:40' },
+                    { name: 'Semaneriya', time: '6:45' },
+                    { name: 'Rathubokkuwa', time: '6:55' },
+                    { name: 'Kandy', time: '7:10' }
+                ]
+            },
+            {
+                id: 'CTB-7.00-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '7:00' },
+                    { name: 'Dambawela Junction', time: '7:05' },
+                    { name: 'Pichchamalwaththa Junction', time: '7:10' },
+                    { name: 'Thannekumbura', time: '7:15' },
+                    { name: 'Mahaiyawa', time: '7:30' },
+                    { name: 'Kandy', time: '7:40' }
+                ]
+            },
+            {
+                id: 'PVT-7.25-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '7:25' },
+                    { name: 'Dambawela Junction', time: '7:30' },
+                    { name: 'Ampitiya', time: '7:35' },
+                    { name: 'Semaneriya', time: '7:40' },
+                    { name: 'Rathubokkuwa', time: '7:50' },
+                    { name: 'Kandy', time: '8:05' }
+                ]
+            },
+            {
+                id: 'PVT-8.00-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '8:00' },
+                    { name: 'Dambawela Junction', time: '8:05' },
+                    { name: 'Ampitiya', time: '8:10' },
+                    { name: 'Semaneriya', time: '8:15' },
+                    { name: 'Rathubokkuwa', time: '8:25' },
+                    { name: 'Kandy', time: '8:40' }
+                ]
+            },
+            {
+                id: 'CTB-8.55-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '8:55' },
+                    { name: 'Dambawela Junction', time: '9:00' },
+                    { name: 'Pichchamalwaththa Junction', time: '9:05' },
+                    { name: 'Thannekumbura', time: '9:10' },
+                    { name: 'Mahaiyawa', time: '9:25' },
+                    { name: 'Kandy', time: '9:35' }
+                ]
+            },
+            {
+                id: 'PVT-9.00-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '9:00' },
+                    { name: 'Dambawela Junction', time: '9:05' },
+                    { name: 'Ampitiya', time: '9:10' },
+                    { name: 'Semaneriya', time: '9:15' },
+                    { name: 'Rathubokkuwa', time: '9:25' },
+                    { name: 'Kandy', time: '9:40' }
+                ]
+            },
+            {
+                id: 'PVT-10.30-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '10:30' },
+                    { name: 'Dambawela Junction', time: '10:35' },
+                    { name: 'Ampitiya', time: '10:40' },
+                    { name: 'Semaneriya', time: '10:45' },
+                    { name: 'Rathubokkuwa', time: '10:55' },
+                    { name: 'Kandy', time: '11:10' }
+                ]
+            },
+            {
+                id: 'CTB-10.50-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '10:50' },
+                    { name: 'Dambawela Junction', time: '10:55' },
+                    { name: 'Pichchamalwaththa Junction', time: '11:00' },
+                    { name: 'Thannekumbura', time: '11:05' },
+                    { name: 'Mahaiyawa', time: '11:15' },
+                    { name: 'Kandy', time: '11:30' }
+                ]
+            },
+            {
+                id: 'PVT-11.15-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '11:15' },
+                    { name: 'Dambawela Junction', time: '11:20' },
+                    { name: 'Ampitiya', time: '11:25' },
+                    { name: 'Semaneriya', time: '11:30' },
+                    { name: 'Rathubokkuwa', time: '11:40' },
+                    { name: 'Kandy', time: '11:55' }
+                ]
+            },
+            {
+                id: 'CTB-12.50-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '12:50' },
+                    { name: 'Dambawela Junction', time: '12:55' },
+                    { name: 'Pichchamalwaththa Junction', time: '13:00' },
+                    { name: 'Thannekumbura', time: '13:05' },
+                    { name: 'Mahaiyawa', time: '13:15' },
+                    { name: 'Kandy', time: '13:30' }
+                ]
+            },
+            {
+                id: 'PVT-13.15-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '13:15' },
+                    { name: 'Dambawela Junction', time: '13:20' },
+                    { name: 'Ampitiya', time: '13:25' },
+                    { name: 'Semaneriya', time: '13:30' },
+                    { name: 'Rathubokkuwa', time: '13:40' },
+                    { name: 'Kandy', time: '13:55' }
+                ]
+            },
+            {
+                id: 'PVT-13.45-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '13:45' },
+                    { name: 'Dambawela Junction', time: '13:50' },
+                    { name: 'Ampitiya', time: '13:55' },
+                    { name: 'Semaneriya', time: '14:00' },
+                    { name: 'Rathubokkuwa', time: '14:10' },
+                    { name: 'Kandy', time: '14:25' }
+                ]
+            },
+            {
+                id: 'CTB-15.10-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '15:10' },
+                    { name: 'Dambawela Junction', time: '15:15' },
+                    { name: 'Pichchamalwaththa Junction', time: '15:20' },
+                    { name: 'Thannekumbura', time: '15:25' },
+                    { name: 'Mahaiyawa', time: '15:35' },
+                    { name: 'Kandy', time: '15:50' }
+                ]
+            },
+            {
+                id: 'PVT-15.45-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '15:45' },
+                    { name: 'Dambawela Junction', time: '15:50' },
+                    { name: 'Ampitiya', time: '15:55' },
+                    { name: 'Semaneriya', time: '16:00' },
+                    { name: 'Rathubokkuwa', time: '16:10' },
+                    { name: 'Kandy', time: '16:25' }
+                ]
+            },
+            {
+                id: 'PVT-16.15-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '16:15' },
+                    { name: 'Dambawela Junction', time: '16:20' },
+                    { name: 'Ampitiya', time: '16:25' },
+                    { name: 'Semaneriya', time: '16:30' },
+                    { name: 'Rathubokkuwa', time: '16:40' },
+                    { name: 'Kandy', time: '16:55' }
+                ]
+            },
+            {
+                id: 'CTB-17.00-D',
+                type: 'CTB',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '17:00' },
+                    { name: 'Dambawela Junction', time: '17:05' },
+                    { name: 'Ampitiya', time: '17:10' },
+                    { name: 'Semaneriya', time: '17:15' },
+                    { name: 'Rathubokkuwa', time: '17:25' },
+                    { name: 'Kandy', time: '17:40' }
+                ]
+            },
+            {
+                id: 'PVT-17.30-D',
+                type: 'Private',
+                route: 'Dambawela - Kandy',
+                direction: 'down',
+                stops: [
+                    { name: 'Dambawela ATI', time: '17:30' },
+                    { name: 'Dambawela Junction', time: '17:35' },
+                    { name: 'Ampitiya', time: '17:40' },
+                    { name: 'Semaneriya', time: '17:45' },
+                    { name: 'Rathubokkuwa', time: '17:55' },
+                    { name: 'Kandy', time: '18:10' }
+                ]
+            }
+        ];
+
+        // Bus markers object to store references
+        const busMarkers = {};
+
+        // Create custom icons for different bus types
+        const ctbIcon = L.divIcon({
+            html: '🚌',
+            className: 'bus-icon',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -20]
+        });
+
+        const privateIcon = L.divIcon({
+            html: '🚐',
+            className: 'bus-icon',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -20]
+        });
+
+        // Add some CSS for the bus icons
+        const busStyle = document.createElement('style');
+        busStyle.textContent = `
+            .bus-icon {
+                font-size: 40px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+            }
+            .bus-icon.up-direction {
+                transform: scaleX(-1);
+            }
+        `;
+        document.head.appendChild(busStyle);
+
+        // Convert time string to minutes
+        function convertTimeToMinutes(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        // Calculate bus position based on current time
+        function calculateBusPosition(bus) {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+
+            // Find the current and next stop based on time
+            let currentStop = null;
+            let nextStop = null;
+            let progress = 0;
+
+            // Check if bus is in service
+            const firstStopTime = convertTimeToMinutes(bus.stops[0].time);
+            const lastStopTime = convertTimeToMinutes(bus.stops[bus.stops.length - 1].time);
+            
+            // If current time is before first stop or after last stop, bus is not in service
+            if (currentTime < firstStopTime || currentTime > lastStopTime) {
+                return null;
+            }
+
+            // Find the current segment the bus is in
+            for (let i = 0; i < bus.stops.length - 1; i++) {
+                const currentStopTime = convertTimeToMinutes(bus.stops[i].time);
+                const nextStopTime = convertTimeToMinutes(bus.stops[i + 1].time);
+
+                if (currentTime >= currentStopTime && currentTime <= nextStopTime) {
+                    currentStop = bus.stops[i];
+                    nextStop = bus.stops[i + 1];
+                    progress = (currentTime - currentStopTime) / (nextStopTime - currentStopTime);
+                    break;
+                }
+            }
+
+            if (!currentStop || !nextStop) {
+                return null; // Bus is not in service
+            }
+
+            // Calculate position between stops
+            const currentCoords = busStops[currentStop.name];
+            const nextCoords = busStops[nextStop.name];
+
+            return [
+                currentCoords[0] + (nextCoords[0] - currentCoords[0]) * progress,
+                currentCoords[1] + (nextCoords[1] - currentCoords[1]) * progress
+            ];
+        }
+
+        // Initialize bus markers and list
+        function initializeBuses() {
+            const busList = document.getElementById('busList');
+            busList.innerHTML = '';
+
+            busRoutes.forEach(bus => {
+                const position = calculateBusPosition(bus);
+                if (position) {
+                    // Add marker to map
+                    const icon = bus.type === 'CTB' ? ctbIcon : privateIcon;
+                    const marker = L.marker(position, { 
+                        icon: L.divIcon({
+                            html: icon.options.html,
+                            className: `bus-icon ${bus.direction === 'up' ? 'up-direction' : ''}`,
+                            iconSize: icon.options.iconSize,
+                            iconAnchor: icon.options.iconAnchor,
+                            popupAnchor: icon.options.popupAnchor
+                        })
+                    })
+                        .bindPopup(`
+                            <b>${bus.id}</b><br>
+                            ${bus.route}<br>
+                            ${bus.type} Bus<br>
+                            Direction: ${bus.direction === 'up' ? 'Kandy → Dambawela' : 'Dambawela → Kandy'}
+                        `);
+                    
+                    busMarkers[bus.id] = marker;
+                    marker.addTo(map);
+
+                    // Find current location
+                    const now = new Date();
+                    const currentTime = now.getHours() * 60 + now.getMinutes();
+                    let currentLocation = '';
+                    let nextLocation = '';
+
+                    for (let i = 0; i < bus.stops.length - 1; i++) {
+                        const currentStopTime = convertTimeToMinutes(bus.stops[i].time);
+                        const nextStopTime = convertTimeToMinutes(bus.stops[i + 1].time);
+
+                        if (currentTime >= currentStopTime && currentTime <= nextStopTime) {
+                            currentLocation = bus.stops[i].name;
+                            nextLocation = bus.stops[i + 1].name;
+                            break;
+                        }
+                    }
+
+                    // Add to list
+                    const busItem = document.createElement('div');
+                    busItem.className = 'bus-item';
+                    busItem.innerHTML = `
+                        <strong>${bus.id}</strong><br>
+                        ${bus.route}<br>
+                        <small>${bus.type} Bus</small><br>
+                        <small>Direction: ${bus.direction === 'up' ? 'Kandy → Dambawela' : 'Dambawela → Kandy'}</small><br>
+                        <small style="color: #1e4d50; font-weight: bold;">Current Location: ${currentLocation} → ${nextLocation}</small>
+                    `;
+                    busItem.onclick = () => {
+                        map.setView(position, 15);
+                        marker.openPopup();
+                    };
+                    busList.appendChild(busItem);
+                }
+            });
+        }
+
+        // Update bus positions every 30 seconds
+        function updateBusPositions() {
+            busRoutes.forEach(bus => {
+                const position = calculateBusPosition(bus);
+                if (position && busMarkers[bus.id]) {
+                    busMarkers[bus.id].setLatLng(position);
+                    
+                    // Update current location in the list
+                    const now = new Date();
+                    const currentTime = now.getHours() * 60 + now.getMinutes();
+                    let currentLocation = '';
+                    let nextLocation = '';
+
+                    for (let i = 0; i < bus.stops.length - 1; i++) {
+                        const currentStopTime = convertTimeToMinutes(bus.stops[i].time);
+                        const nextStopTime = convertTimeToMinutes(bus.stops[i + 1].time);
+
+                        if (currentTime >= currentStopTime && currentTime <= nextStopTime) {
+                            currentLocation = bus.stops[i].name;
+                            nextLocation = bus.stops[i + 1].name;
+                            break;
+                        }
+                    }
+
+                    const busItem = document.querySelector(`[data-bus-id="${bus.id}"]`);
+                    if (busItem) {
+                        const locationSpan = busItem.querySelector('.location-info');
+                        if (locationSpan) {
+                            locationSpan.textContent = `Current Location: ${currentLocation} → ${nextLocation}`;
+                        }
+                    }
+                } else if (!position && busMarkers[bus.id]) {
+                    // Remove bus if it's no longer in service
+                    map.removeLayer(busMarkers[bus.id]);
+                    delete busMarkers[bus.id];
+                    // Remove from list
+                    const busItem = document.querySelector(`[data-bus-id="${bus.id}"]`);
+                    if (busItem) busItem.remove();
+                }
+            });
+        }
+
+        // Initialize the map
+        initializeBuses();
+        // Update positions every 30 seconds
+        setInterval(updateBusPositions, 30000);
+    </script>
+    <script src="script.js"></script>
+    <script src="clock.js"></script>
+</body>
+</html>

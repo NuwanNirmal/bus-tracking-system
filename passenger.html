@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger Dashboard - Bus Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dashboard {
+            max-width: 1400px;
+            margin: 250px auto 0;
+            padding: 100px 20px;
+            position: relative;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: #1e4d50;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px;
+            margin-top: 80px;
+        }
+
+        .action-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            min-width: 280px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .action-card i {
+            font-size: 2.5em;
+            color: #1e4d50;
+            margin-bottom: 20px;
+        }
+
+        .action-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #1e4d50;
+        }
+
+        .action-card p {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        .feedback-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .star {
+            font-size: 24px;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .star.active {
+            color: #ffd700;
+        }
+
+        .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feedback-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .feedback-categories {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .category-checkbox {
+            display: none;
+        }
+
+        .category-label {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-checkbox:checked + .category-label {
+            background: #1e4d50;
+            color: white;
+        }
+
+        .submit-feedback {
+            background: #1e4d50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-feedback:hover {
+            background: #2c7a7b;
+        }
+
+        .back-home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #1e4d50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            z-index: 2;
+        }
+
+        .back-home-btn:hover {
+            background: #2c7a7b;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-home-btn">
+        <i class="fas fa-home"></i> Home
+    </a>
+    <div class="dashboard">
+        <div class="quick-actions">
+            <div class="action-card" onclick="window.location.href='track-bus.html'">
+                <i class="fas fa-map-marker-alt"></i>
+                <h3>Track Buses</h3>
+                <p>View real-time location of buses</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='view-route.html'">
+                <i class="fas fa-route"></i>
+                <h3>View Routes</h3>
+                <p>Check bus routes and stops</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='timetable.html'">
+                <i class="fas fa-clock"></i>
+                <h3>Timetable</h3>
+                <p>View bus schedules</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='fare-calculator.html'">
+                <i class="fas fa-calculator"></i>
+                <h3>Fare Calculator</h3>
+                <p>Calculate your bus fare</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='rating.html'">
+                <i class="fas fa-star"></i>
+                <h3>Rate Your Trip</h3>
+                <p>Share your feedback</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Star rating functionality
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const rating = this.dataset.rating;
+                highlightStars(rating);
+            });
+
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                setRating(rating);
+            });
+        });
+
+        document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+            const activeRating = document.querySelector('.star.active');
+            if (activeRating) {
+                highlightStars(activeRating.dataset.rating);
+            } else {
+                clearStars();
+            }
+        });
+
+        function highlightStars(rating) {
+            clearStars();
+            document.querySelectorAll('.star').forEach(star => {
+                if (star.dataset.rating <= rating) {
+                    star.classList.add('highlighted');
+                    star.style.color = '#ffd700';
+                }
+            });
+        }
+
+        function setRating(rating) {
+            clearStars();
+            document.querySelectorAll('.star').forEach(star => {
+                if (star.dataset.rating <= rating) {
+                    star.classList.add('active');
+                    star.style.color = '#ffd700';
+                }
+            });
+        }
+
+        function clearStars() {
+            document.querySelectorAll('.star').forEach(star => {
+                if (!star.classList.contains('active')) {
+                    star.style.color = '#ddd';
+                }
+                star.classList.remove('highlighted');
+            });
+        }
+
+        function submitFeedback(event) {
+            event.preventDefault();
+            const rating = document.querySelectorAll('.star.active').length;
+            const categories = Array.from(document.querySelectorAll('input[name="category"]:checked'))
+                .map(cb => cb.value);
+            const comment = document.getElementById('feedbackText').value;
+
+            if (rating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+
+            // Here you would typically send this data to your backend
+            console.log({
+                rating,
+                categories,
+                comment
+            });
+
+            // Clear form
+            clearStars();
+            document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+            document.querySelectorAll('input[name="category"]').forEach(cb => cb.checked = false);
+            document.getElementById('feedbackText').value = '';
+
+            alert('Thank you for your feedback!');
+        }
+    </script>
+    <script src="script.js"></script>
+    <script src="clock.js"></script>
+</body>
+</html>
